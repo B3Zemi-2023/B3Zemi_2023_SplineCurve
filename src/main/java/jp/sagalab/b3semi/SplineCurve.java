@@ -26,7 +26,7 @@ public class SplineCurve {
       throw new IllegalArgumentException("_degree < 1");
     }
     // 節点系列と制御点列の整合性チェック
-    if (_knots.length() != _controlPoints.length + _degree - 1) {
+    if (_knots.size() != _controlPoints.length + _degree - 1) {
       throw new IllegalArgumentException("_knots.length NOT equals (_controlPoints.length + _degree - 1).");
     }
 
@@ -49,6 +49,14 @@ public class SplineCurve {
     return Point.createXYT(p.x(), p.y(), _t);
   }
 
+  /**
+   * de Boorアルゴリズムによって評価点を求めます。
+   *
+   * @param _r 次数
+   * @param _i 節点区間インデックス
+   * @param _t パラメーター
+   * @return 評価点
+   */
   public Point deBoor(int _r, int _i, double _t) {
     if (_r == 0) {
       return m_controlPoints[_i];
@@ -63,46 +71,48 @@ public class SplineCurve {
     return p2.internalDivision(p1, w, 1.0 - w);
   }
 
+  /**
+   * パラメーター _t における、次数 _k、制御点インデックス _j のBスプラインを求めます。
+   *
+   * @param _knots 節点列
+   * @param _k     次数
+   * @param _j     制御点インデックス
+   * @param _t     パラメーター
+   * @return Bスプライン
+   */
   public static double bSpline(Knots _knots, int _k, int _j, double _t) {
+    /* 資料 1.7節 「B スプライン表現」の式(3)を実装 */
     { // 特別な場合の処理
-      int knotsSize = _knots.length();
+      int knotsSize = _knots.size();
 
-      // 左端ではブレンドの左側を考慮しない（p.48 図3.14、p.50 図3.16、図3.17）
       if (_j == 0) {
-        double coeff = (_knots.get(_j + _k) - _t) / (_knots.get(_j + _k) - _knots.get(_j));
-        return coeff * bSpline(_knots, _k- 1, _j + 1, _t);
+        /*### 適切な記述 ###*/
       }
 
-      // 右端ではブレンドの右側を考慮しない（p.48 図3.14、p.50 図3.16、図3.17）
       if (_j == knotsSize - _k) {
-        double coeff = (_t - _knots.get(_j - 1)) / (_knots.get(_j + _k- 1) - _knots.get(_j - 1));
-        return coeff * bSpline(_knots, _k- 1, _j, _t);
+        /*### 適切な記述 ###*/
       }
 
       if (_k== 0) {
-        return (_knots.get(_j - 1) <= _t && _t < _knots.get(_j)) ? 1.0 : 0.0;
+        /*### 適切な記述 ###*/
       }
     }
 
     // 通常処理
-    // 分母を先に計算して0になったら（0除算が発生しそうなら）その項の係数は0とする
-    double denom1 = _knots.get(_j + _k- 1) - _knots.get(_j - 1);
-    double denom2 = _knots.get(_j + _k) - _knots.get(_j);
-    double coeff1 = (denom1 != 0.0) ? (_t - _knots.get(_j - 1)) / denom1 : 0.0;
-    double coeff2 = (denom2 != 0.0) ? (_knots.get(_j + _k) - _t) / denom2 : 0.0;
-
-    return coeff1 * bSpline(_knots, _k- 1, _j, _t) + coeff2 * bSpline(_knots, _k- 1, _j + 1, _t);
+    // 分母を先に計算して0になったら（0除算が発生しそうなら）その項の係数は0とする<-これをしないと開一様に対応できない
+    /*### 適切な記述 ###*/
+    return 0.0;
   }
 
   /**
    * 節点番号の探索を行います。
    *
-   * @param _t        パラメータ
+   * @param _t パラメーター
    * @return 節点番号
    * @throws IllegalArgumentException _tにおける節点番号が定義されないとき
    */
   public int searchKnotNum(double _t) {
-    for (var i = 0; i < m_knots.length() - 1; ++i) {
+    for (var i = 0; i < m_knots.size() - 1; ++i) {
       var start = m_knots.get(i);
       var end = m_knots.get(i+1);
 
@@ -195,7 +205,7 @@ public class SplineCurve {
     m_controlPoints = _controlPoints;
     m_knots = _knots;
     final var start = _knots.get(_degree - 1);
-    final var end = _knots.get(_degree + 2 * _controlPoints.length - _knots.length() - 2);
+    final var end = _knots.get(_degree + 2 * _controlPoints.length - _knots.size() - 2);
     m_range = Range.create(start, end - 10e-14);
   }
 

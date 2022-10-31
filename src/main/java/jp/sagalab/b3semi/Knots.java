@@ -23,6 +23,13 @@ public class Knots implements Cloneable {
     return new Knots(_initialValues);
   }
 
+  /**
+   * 一様の節点列を生成する
+   *
+   * @param _degree
+   * @param _cpLength
+   * @return
+   */
   public static Knots createUniform(int _degree, int _cpLength) {
     var knots = new double[_cpLength + _degree - 1];
 
@@ -33,6 +40,13 @@ public class Knots implements Cloneable {
     return create(knots);
   }
 
+  /**
+   * 開一様の節点列を生成する
+   *
+   * @param _degree
+   * @param _cpLength
+   * @return
+   */
   public static Knots createOpenUniform(int _degree, int _cpLength) {
     var knots = new double[_cpLength + _degree - 1];
 
@@ -49,30 +63,20 @@ public class Knots implements Cloneable {
     return create(knots);
   }
 
-  public void add(double _value) {
-    validateValue(_value);
-    m_knotsArray.add(_value);
-    Collections.sort(m_knotsArray);
-  }
-
-  public void remove(double _value) {
-    m_knotsArray.remove(_value);
-  }
-
   public double get(int _index) {
-    return m_knotsArray.get(_index);
+    return m_knotsArray[_index];
   }
 
-  public int length() {
-    return m_knotsArray.size();
+  public int size() {
+    return m_knotsArray.length;
   }
 
   public Range range() {
-    return Range.create(m_knotsArray.get(0), m_knotsArray.get(length() - 1));
+    return Range.create(m_knotsArray[0], m_knotsArray[size() - 1]);
   }
 
   public double[] asArray() {
-    return m_knotsArray.stream().mapToDouble(Double::doubleValue).toArray();
+    return m_knotsArray.clone();
   }
 
   private static void validateValue(double _value) {
@@ -82,7 +86,7 @@ public class Knots implements Cloneable {
   }
 
   private Knots(double... _initialValues) {
-    m_knotsArray = DoubleStream.of(_initialValues).boxed().collect(Collectors.toList());
+    m_knotsArray = _initialValues;
   }
 
   @Override
@@ -94,7 +98,7 @@ public class Knots implements Cloneable {
 
   @Override
   public String toString() {
-    return m_knotsArray.toString();
+    return Arrays.toString(m_knotsArray);
   }
 
   @Override
@@ -102,5 +106,5 @@ public class Knots implements Cloneable {
     return Knots.create(asArray());
   }
 
-  private List<Double> m_knotsArray;
+  private double[] m_knotsArray;
 }

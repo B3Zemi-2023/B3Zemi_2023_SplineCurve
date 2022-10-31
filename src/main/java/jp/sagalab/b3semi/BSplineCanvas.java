@@ -4,27 +4,32 @@ import java.awt.*;
 import java.awt.geom.Line2D;
 
 public class BSplineCanvas extends Canvas {
+  /**
+   * このキャンバス上にBスプラインを描画する（定義域の線もこのメソッドで描画）
+   *
+   * @param _knots             節点列
+   * @param _degree            次数
+   * @param _controlPointsSize 制御点
+   */
   public void drawBSplines(Knots _knots, int _degree, int _controlPointsSize) {
-    final var range = _knots.range();
-    final var span = 0.1;
-
+    // 定義域の線を描画
     drawDomainLines(_knots, _degree, _controlPointsSize);
 
-    for (var i = 0; i < _controlPointsSize; ++i) {
-      var temp = SplineCurve.bSpline(_knots, _degree, i, 0.0);
-
-      for (var t = range.start() + span; t <= range.end(); t+=span) {
-        final var bSpline = SplineCurve.bSpline(_knots, _degree, i, t);
-
-        drawLine(bSplineToPoint(range, temp, t - span), bSplineToPoint(range, bSpline, t), Color.BLACK);
-        temp = bSpline;
-      }
-
-      final var last = SplineCurve.bSpline(_knots, _degree, i, range.end() - 10e-14);
-      drawLine(bSplineToPoint(range, temp, range.end() - span), bSplineToPoint(range, last, range.end()), Color.BLACK);
-    }
+    // Bスプラインを描画
+    /*### 適切な記述 ###*/
+    /* SplineCurveクラスの静的メソッドbSpline()を使って上手くやる */
+    /* 注) Bスプラインを求めるパラメーターtとしてrange.end()を入れる際、
+    　　　　range.end()そのものは定義域外で評価できないため、range.end()と等値にならない程度に減らすといい（10e-14とか） */
   }
 
+  /**
+   * Bスプラインの値を、このキャンバス内で表される点に変換する
+   *
+   * @param _knotsRange 節点列全体の範囲
+   * @param _bSpline    Bスプライン
+   * @param _t          パラメーター
+   * @return キャンバス内で表される点
+   */
   private Point bSplineToPoint(Range _knotsRange, double _bSpline, double _t) {
     final var width = getWidth();
     final var height = getHeight();
@@ -33,6 +38,13 @@ public class BSplineCanvas extends Canvas {
     return Point.createXY(width * _t / rangeLength, height * (1 - _bSpline));
   }
 
+  /**
+   * キャンバス上に_p1と_p2を結ぶ線を描画する
+   *
+   * @param _p1    点1
+   * @param _p2    点2
+   * @param _color 色
+   */
   private void drawLine(Point _p1, Point _p2, Color _color) {
     Graphics2D g = (Graphics2D)getGraphics();
     g.setColor(_color);
@@ -42,17 +54,26 @@ public class BSplineCanvas extends Canvas {
     g.draw(line);
   }
 
+  /**
+   * 定義域の縦線を描画する
+   *
+   * @param _knots             節点列
+   * @param _degree            次数
+   * @param _controlPointsSize 制御点数
+   */
   private void drawDomainLines(Knots _knots, int _degree, int _controlPointsSize) {
     final var width = getWidth();
     final var height = getHeight();
     final var rangeLength = _knots.range().length();
-    {
-      final var value = _knots.get(_degree - 1);
+
+    { // 定義域始点の縦線を描画
+      final var value = /*### 適切な記述 ###*/0.0;
       final var x = width * value / rangeLength;
       drawLine(Point.createXY(x, 0), Point.createXY(x, height), Color.RED);
     }
-    {
-      final var value = _knots.get(_controlPointsSize - 1);
+
+    { // 定義域終点の縦線を描画
+      final var value = /*### 適切な記述 ###*/0.0;
       final var x = width * value / rangeLength;
       drawLine(Point.createXY(x, 0), Point.createXY(x, height), Color.RED);
     }
