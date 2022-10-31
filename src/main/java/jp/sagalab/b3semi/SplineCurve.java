@@ -43,19 +43,10 @@ public class SplineCurve {
     // 対象となる節点番号を求める
     var knotNum = searchKnotNum(_t);
 
-    //System.out.println(knotNum + " " + _t);
-
     // de Boor による評価
-    //var p = deBoor(m_degree, knotNum + 1, _t);
+    var p = deBoor(m_degree, knotNum + 1, _t);
 
-    double x = 0.0, y = 0.0;
-    for (var i = 0; i < controlPoints().length; ++i) {
-      var w = bSpline(m_knots, m_degree, i, _t);
-      x += w * controlPoints()[i].x();
-      y += w * controlPoints()[i].y();
-    }
-
-    return Point.createXYT(x, y, _t);
+    return Point.createXYT(p.x(), p.y(), _t);
   }
 
   public Point deBoor(int _r, int _i, double _t) {
