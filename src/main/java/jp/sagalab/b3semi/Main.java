@@ -17,34 +17,44 @@ public class Main extends JFrame {
 
   public Main() {
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    m_canvas.setSize(800, 600);
-    m_canvas.setBackground(Color.WHITE);
     setTitle("b3zemi");
-    add(m_canvas);
+    setResizable(false);
+
+    var panel = new JPanel();
+    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+    m_canvas.setPreferredSize(new Dimension(800, 600));
+    m_canvas.setBackground(Color.WHITE);
+    panel.add(m_canvas);
+
+    m_bSplineCanvas.setPreferredSize(new Dimension(800, 100));
+    m_bSplineCanvas.setBackground(Color.WHITE);
+    panel.add(m_bSplineCanvas);
+
+    add(panel);
+
+    m_canvas.addMouseListener(new MouseAdapter() {
+      @Override
+      public void mouseClicked(MouseEvent e) {
+        if (m_controlPoints.size() < MAX_CONTROL_POINTS) {
+          Point p = Point.createXY(e.getX(), e.getY());
+
+          // 打った点をリストに追加する
+          m_controlPoints.add(p);
+          // 打った点を描画する
+          drawPoint(p.x(), p.y());
+
+          // 点が揃ったら
+          if (m_controlPoints.size() == MAX_CONTROL_POINTS) {
+            // スプライン曲線の生成、描画を行う
+            drawSplineCurve();
+          }
+        }
+      }
+    });
+
     pack();
     setVisible(true);
-
-    m_canvas.addMouseListener(
-            new MouseAdapter() {
-              @Override
-              public void mouseClicked(MouseEvent e) {
-                if (m_controlPoints.size() < MAX_CONTROL_POINTS) {
-                  Point p = Point.createXY(e.getX(), e.getY());
-
-                  // 打った点をリストに追加する
-                  m_controlPoints.add(p);
-                  // 打った点を描画する
-                  drawPoint(p.x(), p.y());
-
-                  // 点が揃ったら
-                  if (m_controlPoints.size() == MAX_CONTROL_POINTS) {
-                    // スプライン曲線の生成、描画を行う
-                    drawSplineCurve();
-                  }
-                }
-              }
-            }
-    );
   }
 
   /**
@@ -55,36 +65,24 @@ public class Main extends JFrame {
   }
 
   public void drawSplineCurve() {
-    /* ↓ここから必要な処理を書き足していく↓ */
-    // コツ: SplineCurve.create(args ・・・)でインスタンス生成を行い(引数は自分で考える)、
-    // SplineCurve.evaluate(_t) と drawLine(_p1, _p2) を駆使する
+    getGraphics().setColor(Color.red);
+    var controlPoints = m_controlPoints.toArray(new Point[0]);
+    var knots = Knots.createUniform(3, m_controlPoints.size());
+    var curve = SplineCurve.create(3, controlPoints, knots);
+    var range = curve.range();
 
-    //リストを配列に変換する
-    Point[] cpPoints = m_controlPoints.toArray(new Point[0]);
+    var temp = curve.evaluate(range.start());
+    var span = 0.1;
 
-  }
-
-  /**
-   * 次数と制御点数から節点の区間数を求め、間を等分するような節点系列を返す。
-   *
-   * @param _degree   次数
-   * @param _range    存在範囲
-   * @param _cpLength 制御点数
-   * @return 節点系列
-   */
-  private static double[] createKnots(int _degree, Range _range, int _cpLength) {
-    // 節点系列の生成
-    double start = _range.start();
-    double end = _range.end();
-    // 有効定義域の節点区間数
-    int knotIntervalNum = _cpLength - _degree;
-    double[] knots = new double[knotIntervalNum + 2 * _degree - 1];
-
-    for (int i = 0; i < knots.length; ++i) {
-      double w = (i - _degree + 1) / (double) knotIntervalNum;
-      knots[i] = (1.0 - w) * start + w * end;
+    for (var t = range.start() + span; t <= range.end(); t+=span) {
+      var p = curve.evaluate(t);
+      drawLine(temp, p);
+      temp = p;
     }
-    return knots;
+
+    drawLine(temp, curve.evaluate(range.end()));
+
+    m_bSplineCanvas.drawBSplines(knots, 3, controlPoints.length);
   }
 
   /**
@@ -116,9 +114,11 @@ public class Main extends JFrame {
   /** キャンバスを表す変数 */
   private final Canvas m_canvas = new Canvas();
 
+  private final BSplineCanvas m_bSplineCanvas = new BSplineCanvas();
+
   /** クリックで打たれた点を保持するリスト */
   private final List<Point> m_controlPoints = new ArrayList<>();
 
   /** 点の数の上限 */
-  private static final int MAX_CONTROL_POINTS = 6;
+  private static final int MAX_CONTROL_POINTS = 5;
 }

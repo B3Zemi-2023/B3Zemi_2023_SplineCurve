@@ -15,37 +15,22 @@ public class SplineCurve {
    * @param _degree        次数
    * @param _controlPoints 制御点列
    * @param _knots         節点系列
-   * @param _range         存在範囲
    * @return スプライン曲線
    * @throws IllegalArgumentException スプライン曲線の次数が1未満の場合
    * @throws IllegalArgumentException 存在範囲の始点が節点系列の(次数 - 1)番目よりも小さい場合、
    *                                  または、存在範囲の終点が節点系列の(節点系列の要素数 - 次数)番目よりも大きい場合
    */
-  public static SplineCurve create(int _degree, Point[] _controlPoints, double[] _knots, Range _range) {
+  public static SplineCurve create(int _degree, Point[] _controlPoints, Knots _knots) {
     // 次数のチェック
     if (_degree < 1) {
       throw new IllegalArgumentException("_degree < 1");
     }
-    // 存在範囲と節点系列の整合性チェック
-    if (_range.start() < _knots[_degree - 1] || _knots[_knots.length - _degree] < _range.end()) {
-      throw new IllegalArgumentException("There is no consistency of _range and _knots.");
-    }
     // 節点系列と制御点列の整合性チェック
-    if (_knots.length != _controlPoints.length + _degree - 1) {
+    if (_knots.length() != _controlPoints.length + _degree - 1) {
       throw new IllegalArgumentException("_knots.length NOT equals (_controlPoints.length + _degree - 1).");
     }
-    // 節点系列のチェック
-    double pre = _knots[0];
-    for (double d : _knots) {
-      if (Double.isInfinite(d) || Double.isNaN(d)) {
-        throw new IllegalArgumentException("_knots is included in infinity or NaN.");
-      }
-      if (d < pre) {
-        throw new IllegalArgumentException("There are counter flowed _knots.");
-      }
-      pre = d;
-    }
-    return new SplineCurve(_degree, _controlPoints, _knots, _range);
+
+    return new SplineCurve(_degree, _controlPoints, _knots);
   }
 
   /**
@@ -56,59 +41,86 @@ public class SplineCurve {
    */
   public Point evaluate(double _t) {
     // 対象となる節点番号を求める
-    int knotNum = searchKnotNum(_t, m_degree - 1, m_knots.length - m_degree);
-    // 部分制御点列の抽出
-    Point[] part = new Point[m_degree + 1];
-    System.arraycopy(m_cp, knotNum - m_degree, part, 0, part.length);
+    var knotNum = searchKnotNum(_t);
+
+    //System.out.println(knotNum + " " + _t);
+
     // de Boor による評価
-    for (int i = 0; i < m_degree; ++i) {
-      for (int j = 0; j < m_degree - i; ++j) {
-        int k = knotNum - j - 1;
-        double w = (_t - m_knots[k]) / (m_knots[k + m_degree - i] - m_knots[k]);
-        part[m_degree - j] = part[m_degree - j].internalDivision(part[m_degree - j - 1], 1 - w, w);
+    //var p = deBoor(m_degree, knotNum + 1, _t);
+
+    double x = 0.0, y = 0.0;
+    for (var i = 0; i < controlPoints().length; ++i) {
+      var w = bSpline(m_knots, m_degree, i, _t);
+      x += w * controlPoints()[i].x();
+      y += w * controlPoints()[i].y();
+    }
+
+    return Point.createXYT(x, y, _t);
+  }
+
+  public Point deBoor(int _r, int _i, double _t) {
+    if (_r == 0) {
+      return m_controlPoints[_i];
+    }
+
+    final double w = (m_knots.get(_i + m_degree - _r) - _t)
+                   / (m_knots.get(_i + m_degree - _r) - m_knots.get(_i - 1));
+
+    var p1 = deBoor(_r - 1, _i - 1, _t);
+    var p2 = deBoor(_r - 1, _i, _t);
+
+    return p2.internalDivision(p1, w, 1.0 - w);
+  }
+
+  public static double bSpline(Knots _knots, int _k, int _j, double _t) {
+    { // 特別な場合の処理
+      int knotsSize = _knots.length();
+
+      // 左端ではブレンドの左側を考慮しない（p.48 図3.14、p.50 図3.16、図3.17）
+      if (_j == 0) {
+        double coeff = (_knots.get(_j + _k) - _t) / (_knots.get(_j + _k) - _knots.get(_j));
+        return coeff * bSpline(_knots, _k- 1, _j + 1, _t);
+      }
+
+      // 右端ではブレンドの右側を考慮しない（p.48 図3.14、p.50 図3.16、図3.17）
+      if (_j == knotsSize - _k) {
+        double coeff = (_t - _knots.get(_j - 1)) / (_knots.get(_j + _k- 1) - _knots.get(_j - 1));
+        return coeff * bSpline(_knots, _k- 1, _j, _t);
+      }
+
+      if (_k== 0) {
+        return (_knots.get(_j - 1) <= _t && _t < _knots.get(_j)) ? 1.0 : 0.0;
       }
     }
-    Point p = part[m_degree];
 
-    return Point.createXYT(p.x(), p.y(), _t);
+    // 通常処理
+    // 分母を先に計算して0になったら（0除算が発生しそうなら）その項の係数は0とする
+    double denom1 = _knots.get(_j + _k- 1) - _knots.get(_j - 1);
+    double denom2 = _knots.get(_j + _k) - _knots.get(_j);
+    double coeff1 = (denom1 != 0.0) ? (_t - _knots.get(_j - 1)) / denom1 : 0.0;
+    double coeff2 = (denom2 != 0.0) ? (_knots.get(_j + _k) - _t) / denom2 : 0.0;
+
+    return coeff1 * bSpline(_knots, _k- 1, _j, _t) + coeff2 * bSpline(_knots, _k- 1, _j + 1, _t);
   }
 
   /**
    * 節点番号の探索を行います。
    *
    * @param _t        パラメータ
-   * @param _minIndex 探索範囲の最小節点番号
-   * @param _maxIndex 探索範囲の最大節点番号
    * @return 節点番号
-   * @throws ArrayIndexOutOfBoundsException 指定された節点番号が不正な値の場合
-   * @throws IllegalArgumentException       _minIndex が _maxIndex より大きい場合
+   * @throws IllegalArgumentException _tにおける節点番号が定義されないとき
    */
-  public int searchKnotNum(double _t, int _minIndex, int _maxIndex) {
-    if (_minIndex < 0 || _maxIndex >= m_knots.length) {
-      throw new ArrayIndexOutOfBoundsException("_minIndex < 0 || _maxIndex >= m_knots.length");
-    }
-    if (_minIndex > _maxIndex) {
-      throw new IllegalArgumentException("_minIndex > _maxIndex");
+  public int searchKnotNum(double _t) {
+    for (var i = 0; i < m_knots.length() - 1; ++i) {
+      var start = m_knots.get(i);
+      var end = m_knots.get(i+1);
+
+      if (start <= _t && _t < end) {
+        return i;
+      }
     }
 
-    if (m_knots[_maxIndex] <= _t) {
-      return _maxIndex;
-    }
-    if (_minIndex < _maxIndex) { // 探索区間がある場合
-      // 二分探索法
-      do {
-        int i = (_minIndex + _maxIndex) / 2;
-        if (m_knots[i] <= _t && _t < m_knots[i + 1]) {
-          return i + 1;
-        } else if (_t < m_knots[i]) {
-          _maxIndex = i - 1;
-        } else /* if ( _knots[i + 1] <= _t ) */ {
-          _minIndex = i + 1;
-        }
-      } while (_minIndex <= _maxIndex);
-    }
-
-    return _minIndex + 1;
+    throw new IllegalArgumentException("Knot number in _t is not defined");
   }
 
   /**
@@ -126,7 +138,7 @@ public class SplineCurve {
    * @return 制御点列
    */
   public Point[] controlPoints() {
-    return m_cp.clone();
+    return m_controlPoints.clone();
   }
 
   /**
@@ -134,7 +146,7 @@ public class SplineCurve {
    *
    * @return 節点系列
    */
-  public double[] knots() {
+  public Knots knots() {
     return m_knots.clone();
   }
 
@@ -144,7 +156,7 @@ public class SplineCurve {
    * @return パラメータの範囲
    */
   public Range range() {
-    return Range.create(m_range.start(), m_range.end());
+    return m_range.clone();
   }
 
   /**
@@ -166,10 +178,10 @@ public class SplineCurve {
     if (this.m_degree != other.m_degree) {
       return false;
     }
-    if (!Arrays.deepEquals(this.m_cp, other.m_cp)) {
+    if (!Arrays.deepEquals(this.m_controlPoints, other.m_controlPoints)) {
       return false;
     }
-    if (!Arrays.equals(this.m_knots, other.m_knots)) {
+    if (!this.m_knots.equals(other.m_knots)) {
       return false;
     }
     return this.m_range != null && this.m_range.equals(other.m_range);
@@ -183,23 +195,25 @@ public class SplineCurve {
   @Override
   public String toString() {
     return String.format(
-            "cp:%s knots:%s degree:%d range:%s", Arrays.deepToString(m_cp),
-            Arrays.toString(m_knots), m_degree, m_range.toString());
+            "cp:%s\nknots:%s\ndegree:%d range:%s", Arrays.deepToString(m_controlPoints),
+            m_knots.toString(), m_degree, m_range.toString());
   }
 
-  private SplineCurve(int _degree, Point[] _controlPoints, double[] _knots, Range _range) {
+  private SplineCurve(int _degree, Point[] _controlPoints, Knots _knots) {
     m_degree = _degree;
-    m_cp = _controlPoints;
+    m_controlPoints = _controlPoints;
     m_knots = _knots;
-    m_range = _range;
+    final var start = _knots.get(_degree - 1);
+    final var end = _knots.get(_degree + 2 * _controlPoints.length - _knots.length() - 2);
+    m_range = Range.create(start, end - 10e-14);
   }
 
   /** 次数 */
   private final int m_degree;
   /** 制御点列 */
-  private final Point[] m_cp;
+  private final Point[] m_controlPoints;
   /** 節点系列 */
-  private final double[] m_knots;
+  private final Knots m_knots;
   /** パラメータ範囲 */
   private final Range m_range;
 }

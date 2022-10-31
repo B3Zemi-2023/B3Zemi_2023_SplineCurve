@@ -5,7 +5,7 @@ package jp.sagalab.b3semi;
  *
  * @author Akira Nishikawa
  */
-public class Range {
+public class Range implements Cloneable {
 
   /**
    * 範囲を生成します。
@@ -83,7 +83,7 @@ public class Range {
    * @param _d チェックする値
    * @return 範囲内にある場合はtrue
    */
-  public boolean isInner(double _d) {
+  public boolean contains(double _d) {
     return !Double.isNaN(_d) && (m_start <= _d && _d <= m_end);
   }
 
@@ -93,8 +93,8 @@ public class Range {
    * @param _range チェックする範囲
    * @return 範囲内にある場合はtrue
    */
-  public boolean isInner(Range _range) {
-    return isInner(_range.m_start) && isInner(_range.m_end);
+  public boolean contains(Range _range) {
+    return contains(_range.m_start) && contains(_range.m_end);
   }
 
   /**
@@ -127,6 +127,11 @@ public class Range {
   @Override
   public String toString() {
     return String.format("s:%.3f e:%.3f", m_start, m_end);
+  }
+
+  @Override
+  public Range clone() {
+    return Range.create(m_start, m_end);
   }
 
   private Range(double _start, double _end) {
