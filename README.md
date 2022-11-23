@@ -4,12 +4,12 @@ Canvasに制御点を打って、その制御点をもとにSpline曲線の描�
 
 ```
 $ git clone git@github.com:B3Zemi-2022/B3Zemi_2022_SplineCurve.git
-$ git checkout -b challenge1/(yourName)
-$ git fetch origin challenge1
-$ git reset --hard origin/challenge1
+$ git checkout -b challenge2/(yourName)
+$ git fetch origin challenge2
+$ git reset --hard origin/challenge2
 
 # 作業が終わったらコミットしてプッシュ
-$ git push -u origin challenge1/(yourName)
+$ git push -u origin challenge2/(yourName)
 ```
 
 ## 課題概要
@@ -20,7 +20,7 @@ Bスプライン曲線には、節点挿入アルゴリズムというものが�
 ### 節点挿入アルゴリズム
 
 挿入する節点を $x$ とし、節点挿入後の節点列を $u$ とします。
-ここで、$x$ は曲線の定義域内の値である必要があり、節点挿入後の節点列は昇順でなければなりません。
+ここで、 $x$ は曲線の定義域内の値である必要があり、節点挿入後の節点列は昇順でなければなりません。
 $x$ を適切な位置に挿入した後、再構成される制御点は以下のようになります。なお、 $d$ を再構成前の制御点、 $\hat{d}$ を再構成後の制御点とします。また、 $n$ は曲線の次数、 $I$ は $x$ が属する節点区間のインデックスを表しています。
 
 ```math
