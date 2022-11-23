@@ -1,17 +1,37 @@
 ﻿# B3Zemi_2022_SplineCurve
+
 Canvasに制御点を打って、その制御点をもとにSpline曲線の描画を行うプログラムです。
 
-## 作業手順
-1. このリポジトリをローカルにcloneする.
-2. cloneしてきたmaster-branchから新たに自分のブランチを作成する.
-3. 新たに作成した自分のブランチに切り替える.
-4. MainクラスのdrawSplineCurveメソッドに処理を書き込んで,Spline曲線が描画できるように改良する.
-5. GitHubに自分のブランチをpushする.(add, commitを忘れずに!)
-6. 次数やknot,制御点数などを変えてみて,Spline曲線がどう変化するのか試してみる.
+```
+$ git clone git@github.com:B3Zemi-2022/B3Zemi_2022_SplineCurve.git
+$ git checkout -b challenge1/(yourName)
+$ git fetch origin challenge1
+$ git reset --hard origin/challenge1
 
-## 処理の流れ(ヒント)
-1. 制御点をMAX_CONTROL_POINTSの数だけ入力する.
-2. drawSplineCurveメソッドが呼び出される.
-3. SplineCurveクラスにあるcreateを用いてSpline曲線のインスタンス生成を行う.
-4. evaluateメソッドを用いて評価点を取得する.
-5. 得られた評価点からSpline曲線の描画を行う.
+# 作業が終わったらコミットしてプッシュ
+$ git push -u origin challenge1/(yourName)
+```
+
+## 課題概要
+
+Bスプライン曲線には、節点挿入アルゴリズムというものがあり、曲線の形を変えずに節点を挿入することができます。
+曲線の形が変わらないのは、挿入した節点によって制御点の位置を再構成するためです。
+
+### 節点挿入アルゴリズム
+
+挿入する節点を $x$ とし、節点挿入後の節点列を $u$ とします。
+ここで、$x$ は曲線の定義域内の値である必要があり、節点挿入後の節点列は昇順でなければなりません。
+$x$ を適切な位置に挿入した後、再構成される制御点は以下のようになります。なお、$d$ を再構成前の制御点、$\hat{d}$ を再構成後の制御点とします。また、$n$ は曲線の次数、$I$ は $x$ が属する節点区間のインデックスを表しています。
+
+$$ \hat{d}_i = \left\{
+  \begin{align}   
+    & d_i & (i = 0,\dots,I-n+1) \\   
+    & \frac{u_{I+1} - u_{i-1}}{u_{i+n} - u_{i-1}}d_i + \frac{u_{i+n} - u_{I+1}}{u_{i+n} - u_{i-1}}d_{i-1} & (i = I-n+2,\dots,I+1) \\
+    & d_{i-1} & other
+  \end{align} 
+  \right. 
+$$
+
+## 実装してほしい部分
+
+1. SplineCurveクラスの`knotInserted()`
