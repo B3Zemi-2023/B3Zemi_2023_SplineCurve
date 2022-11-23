@@ -1,5 +1,6 @@
 package jp.sagalab.b3semi;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -41,7 +42,7 @@ public class SplineCurve {
    */
   public Point evaluate(double _t) {
     // 対象となる節点番号を求める
-    var knotNum = searchKnotNum(_t);
+    var knotNum = knotIntervalIndex(_t);
 
     // de Boor による評価
     var p = deBoor(m_degree, knotNum + 1, _t);
@@ -95,13 +96,13 @@ public class SplineCurve {
   }
 
   /**
-   * 節点番号の探索を行います。
+   * 特定のパラメータにおける節点範囲のインデックスを返します
    *
    * @param _t        パラメータ
    * @return 節点番号
    * @throws IllegalArgumentException _tにおける節点番号が定義されないとき
    */
-  public int searchKnotNum(double _t) {
+  public int knotIntervalIndex(double _t) {
     for (var i = 0; i < m_knots.length() - 1; ++i) {
       var start = m_knots.get(i);
       var end = m_knots.get(i+1);
@@ -112,6 +113,59 @@ public class SplineCurve {
     }
 
     throw new IllegalArgumentException("Knot number in _t is not defined");
+  }
+
+  /**
+   * 節点を挿入し、挿入後の新たなスプライン曲線を返します
+   *
+   * @param _knot        挿入する節点
+   * @return 節点挿入後のスプライン曲線
+   * @throws IllegalArgumentException _knotが定義域内に含まれないとき
+   */
+  public SplineCurve knotInserted(double _knot) {
+    if (domain().contains(_knot)) {
+      final int intervalIndex = knotIntervalIndex(_knot);
+      final int knotsSize = m_knots.length() + 1;
+      final int controlPointsSize = m_controlPoints.length + 1;
+      final int n = degree();
+      Point[] controlPoints = new Point[controlPointsSize];
+      ArrayList<Double> knots = new ArrayList();
+
+      knots.add(m_knots.front());
+
+      for (var i = 1; i < knotsSize - 1; ++i) {
+        final var pre = m_knots.get(i - 1);
+        final var current = m_knots.get(i);
+
+        if (pre <= _knot && _knot < current) {
+          knots.add(_knot);
+        }
+
+        knots.add(current);
+      }
+
+      for (var i = 0; i < controlPointsSize; ++i) {
+        if (0 <= i && i <= intervalIndex - degree() + 1) {
+          controlPoints[i] =  m_controlPoints[i];
+        }
+        else if (intervalIndex - degree() + 2 <= i && i <= intervalIndex + 1) {
+          final var coeff1 = (knots.get(intervalIndex + 1) - knots.get(i - 1)) / (knots.get(i + n) - knots.get(i - 1));
+          final var coeff2 = (knots.get(i + n) - knots.get(intervalIndex + 1)) / (knots.get(i + n) - knots.get(i - 1));
+          final var x = coeff1 * m_controlPoints[i].x() + coeff2 * m_controlPoints[i - 1].x();
+          final var y = coeff1 * m_controlPoints[i].y() + coeff2 * m_controlPoints[i - 1].y();
+
+          controlPoints[i] = Point.createXY(x, y);
+        }
+        else {
+          controlPoints[i] =  m_controlPoints[i - 1];
+        }
+      }
+
+      return create(degree(), controlPoints, Knots.create(knots.stream().mapToDouble(Double::doubleValue).toArray()));
+    }
+    else {
+      throw new IllegalArgumentException("_knot must be included in domain");
+    }
   }
 
   /**
@@ -146,7 +200,7 @@ public class SplineCurve {
    *
    * @return パラメータの範囲
    */
-  public Range range() {
+  public Range domain() {
     return m_range.clone();
   }
 

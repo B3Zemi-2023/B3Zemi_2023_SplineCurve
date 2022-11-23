@@ -3,11 +3,11 @@ package jp.sagalab.b3semi;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.Canvas;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseAdapter;
+import java.awt.event.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -17,19 +17,39 @@ public class Main extends JFrame {
 
   public Main() {
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    setTitle("b3zemi");
+    setTitle("b3semi");
     setResizable(false);
 
     var panel = new JPanel();
     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
+    var textField = new JTextField();
+    var button = new JButton("insert");
+    textField.setMaximumSize(new Dimension(200, 40));
+    panel.add(textField);
+    panel.add(button);
+
+    button.addActionListener(new AbstractAction() {
+      @Override
+      public void actionPerformed(ActionEvent e) {
+        final var knot = Double.parseDouble(textField.getText());
+
+        m_curve = m_curve.knotInserted(knot);
+
+        m_canvas.getGraphics().clearRect(0, 0, 800, 600);
+        drawSplineCurve(m_curve);
+
+        for (var cp : m_curve.controlPoints()) {
+          drawPoint(cp.x(), cp.y());
+        }
+
+        System.out.println(Arrays.toString(m_curve.knots().asArray()));
+      }
+    });
+
     m_canvas.setPreferredSize(new Dimension(800, 600));
     m_canvas.setBackground(Color.WHITE);
     panel.add(m_canvas);
-
-    m_bSplineCanvas.setPreferredSize(new Dimension(800, 100));
-    m_bSplineCanvas.setBackground(Color.WHITE);
-    panel.add(m_bSplineCanvas);
 
     add(panel);
 
@@ -46,8 +66,13 @@ public class Main extends JFrame {
 
           // 点が揃ったら
           if (m_controlPoints.size() == MAX_CONTROL_POINTS) {
+            var controlPoints = m_controlPoints.toArray(new Point[0]);
+            var knots = Knots.createUniform(3, m_controlPoints.size());
+
+            m_curve = SplineCurve.create(3, controlPoints, knots);
+
             // スプライン曲線の生成、描画を行う
-            drawSplineCurve();
+            drawSplineCurve(m_curve);
           }
         }
       }
@@ -64,25 +89,20 @@ public class Main extends JFrame {
     new Main();
   }
 
-  public void drawSplineCurve() {
+  public void drawSplineCurve(SplineCurve _curve) {
     getGraphics().setColor(Color.red);
-    var controlPoints = m_controlPoints.toArray(new Point[0]);
-    var knots = Knots.createUniform(3, m_controlPoints.size());
-    var curve = SplineCurve.create(3, controlPoints, knots);
-    var range = curve.range();
+    var domain = _curve.domain();
 
-    var temp = curve.evaluate(range.start());
-    var span = 0.1;
+    var temp = _curve.evaluate(domain.start());
+    var span = 0.01;
 
-    for (var t = range.start() + span; t <= range.end(); t+=span) {
-      var p = curve.evaluate(t);
+    for (var t = domain.start() + span; t <= domain.end(); t+=span) {
+      var p = _curve.evaluate(t);
       drawLine(temp, p);
       temp = p;
     }
 
-    drawLine(temp, curve.evaluate(range.end()));
-
-    m_bSplineCanvas.drawBSplines(knots, 3, controlPoints.length);
+    drawLine(temp, _curve.evaluate(domain.end()));
   }
 
   /**
@@ -114,10 +134,10 @@ public class Main extends JFrame {
   /** キャンバスを表す変数 */
   private final Canvas m_canvas = new Canvas();
 
-  private final BSplineCanvas m_bSplineCanvas = new BSplineCanvas();
-
   /** クリックで打たれた点を保持するリスト */
   private final List<Point> m_controlPoints = new ArrayList<>();
+
+  private SplineCurve m_curve;
 
   /** 点の数の上限 */
   private static final int MAX_CONTROL_POINTS = 5;

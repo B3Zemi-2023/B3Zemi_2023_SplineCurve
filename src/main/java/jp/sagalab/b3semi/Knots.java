@@ -63,6 +63,14 @@ public class Knots implements Cloneable {
     return m_knotsArray.get(_index);
   }
 
+  public double front() {
+    return m_knotsArray.get(0);
+  }
+
+  public double back() {
+    return m_knotsArray.get(m_knotsArray.size() - 1);
+  }
+
   public int length() {
     return m_knotsArray.size();
   }
