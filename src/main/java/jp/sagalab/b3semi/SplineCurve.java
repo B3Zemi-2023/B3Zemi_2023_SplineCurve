@@ -123,49 +123,8 @@ public class SplineCurve {
    * @throws IllegalArgumentException _knotが定義域内に含まれないとき
    */
   public SplineCurve knotInserted(double _knot) {
-    if (domain().contains(_knot)) {
-      final int intervalIndex = knotIntervalIndex(_knot);
-      final int knotsSize = m_knots.length() + 1;
-      final int controlPointsSize = m_controlPoints.length + 1;
-      final int n = degree();
-      Point[] controlPoints = new Point[controlPointsSize];
-      ArrayList<Double> knots = new ArrayList();
-
-      knots.add(m_knots.front());
-
-      for (var i = 1; i < knotsSize - 1; ++i) {
-        final var pre = m_knots.get(i - 1);
-        final var current = m_knots.get(i);
-
-        if (pre <= _knot && _knot < current) {
-          knots.add(_knot);
-        }
-
-        knots.add(current);
-      }
-
-      for (var i = 0; i < controlPointsSize; ++i) {
-        if (0 <= i && i <= intervalIndex - degree() + 1) {
-          controlPoints[i] =  m_controlPoints[i];
-        }
-        else if (intervalIndex - degree() + 2 <= i && i <= intervalIndex + 1) {
-          final var coeff1 = (knots.get(intervalIndex + 1) - knots.get(i - 1)) / (knots.get(i + n) - knots.get(i - 1));
-          final var coeff2 = (knots.get(i + n) - knots.get(intervalIndex + 1)) / (knots.get(i + n) - knots.get(i - 1));
-          final var x = coeff1 * m_controlPoints[i].x() + coeff2 * m_controlPoints[i - 1].x();
-          final var y = coeff1 * m_controlPoints[i].y() + coeff2 * m_controlPoints[i - 1].y();
-
-          controlPoints[i] = Point.createXY(x, y);
-        }
-        else {
-          controlPoints[i] =  m_controlPoints[i - 1];
-        }
-      }
-
-      return create(degree(), controlPoints, Knots.create(knots.stream().mapToDouble(Double::doubleValue).toArray()));
-    }
-    else {
-      throw new IllegalArgumentException("_knot must be included in domain");
-    }
+    /** 適切な記述 **/
+    return null;
   }
 
   /**
