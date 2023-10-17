@@ -59,8 +59,28 @@ public class Main extends JFrame {
     // コツ: SplineCurve.create(args ・・・)でインスタンス生成を行い(引数は自分で考える)、
     // SplineCurve.evaluate(_t) と drawLine(_p1, _p2) を駆使する
 
+    //次数
+    int degree = 3;
+
+    //範囲を生成
+    Range range = Range.create(0.0 ,1.0);
+
+    double[] knots = createKnots(degree, range, m_controlPoints.size());
+
     //リストを配列に変換する
     Point[] cpPoints = m_controlPoints.toArray(new Point[0]);
+
+    SplineCurve splineCurve = SplineCurve.create(degree, cpPoints, knots, range);
+
+    List<Point> evaluate_point = new ArrayList<>();
+
+    for (double t=0; t<=1; t+=0.01){
+      evaluate_point.add(splineCurve.evaluate(t));
+    }
+
+    for (int i=0; i<=evaluate_point.size()-2; i++){
+      drawLine(evaluate_point.get(i), evaluate_point.get(i+1));
+    }
 
   }
 
