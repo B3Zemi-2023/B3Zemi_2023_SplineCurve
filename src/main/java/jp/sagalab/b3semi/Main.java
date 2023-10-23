@@ -65,7 +65,11 @@ public class Main extends JFrame {
     //範囲を生成
     Range range = Range.create(0.0 ,1.0);
 
-    double[] knots = createKnots(degree, range, m_controlPoints.size());
+    //節点列を生成(制御点数+次数-1)
+   //double[] knots = createKnots(degree, range, m_controlPoints.size());
+
+    double[] knots = new double[]{0.0, 0.0, 0.0, 0.4, 0.5, 1.0, 1.0, 1.0};
+    System.out.println(knots);
 
     //リストを配列に変換する
     Point[] cpPoints = m_controlPoints.toArray(new Point[0]);
@@ -79,7 +83,7 @@ public class Main extends JFrame {
     }
 
     for (int i=0; i<=evaluate_point.size()-2; i++){
-      drawLine(evaluate_point.get(i), evaluate_point.get(i+1));
+      drawLine(evaluate_point.get(i), evaluate_point.get(i+1), Color.red);
     }
 
   }
@@ -126,9 +130,9 @@ public class Main extends JFrame {
    * @param _p1 始点
    * @param _p2 終点
    */
-  public void drawLine(Point _p1, Point _p2) {
+  public void drawLine(Point _p1, Point _p2, Color color) {
     Graphics2D g = (Graphics2D)m_canvas.getGraphics();
-
+    g.setColor(color);
     Line2D.Double line = new Line2D.Double(_p1.x(), _p1.y(), _p2.x(), _p2.y());
     g.draw(line);
   }
