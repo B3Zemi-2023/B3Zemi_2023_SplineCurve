@@ -8,6 +8,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -61,7 +62,20 @@ public class Main extends JFrame {
 
     //リストを配列に変換する
     Point[] cpPoints = m_controlPoints.toArray(new Point[0]);
-
+    Range range = Range.create(0.0, 1.0);
+    int degree = 3;
+    //double[] knots = createKnots(degree, range, cpPoints.length);//
+    double[] knots = new double[]{0.0, 0.0, 0.0, 0.1, 0.95, 0.99, 1.0, 1.0, 1.0};
+    System.out.println(Arrays.toString(knots));
+    SplineCurve spline = SplineCurve.create(degree, cpPoints, knots, range);
+    List<Point> evaluatePoints = new ArrayList<>();
+    for (double n = 0 ; n <= 1 ; n += 0.001) {
+      Point i = spline.evaluate(n);
+      evaluatePoints.add(i);
+    }
+    for (int n = 0 ; n < evaluatePoints.size() - 1 ; n ++) {
+      drawLine(evaluatePoints.get(n), evaluatePoints.get(n+1));
+    }
   }
 
   /**
@@ -120,5 +134,5 @@ public class Main extends JFrame {
   private final List<Point> m_controlPoints = new ArrayList<>();
 
   /** 点の数の上限 */
-  private static final int MAX_CONTROL_POINTS = 6;
+  private static final int MAX_CONTROL_POINTS = 7;
 }
