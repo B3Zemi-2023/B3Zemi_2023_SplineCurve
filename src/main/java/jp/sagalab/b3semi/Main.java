@@ -65,17 +65,30 @@ public class Main extends JFrame {
     Range range= Range.create(0.0,1.0);
     int degree=3;
     //double[] knots =createKnots(degree,range, cpPoints.length);
-    double[] knots= new double[]{0.0,0.0,0.0,0.333,0.666,0.9,1.0,1.0,1.0};
+    double[] knots= new double[]{0.0,0.0,0.0,0.333,0.666,1.0,1.0,1.0};
     System.out.println(Arrays.toString(knots));
     SplineCurve spline = SplineCurve.create(degree,cpPoints,knots,range);
     List<Point> evaluatePoints = new ArrayList<>();
-    for (double n = 0 ; n <= 1 ; n += 0.001) {
-      Point i = spline.evaluate(n);
-      evaluatePoints.add(i);
+    Point p0 =spline.evaluate(range.start());
+    for (double _t = 0.0 ;_t<0.3333; _t += 0.001) {
+      Point p1 = spline.evaluate(_t);
+      drawLine(p0,p1,Color.blue);
+      p0 = p1;
     }
-    for(int n=0 ;n<=evaluatePoints.size()-1 ; n++){
-      drawLine(evaluatePoints.get(n),evaluatePoints.get(n+1));
+
+    for (double _t = 0.3333 ;_t<0.6666; _t += 0.001) {
+      Point p1 = spline.evaluate(_t);
+      drawLine(p0,p1,Color.red);
+      p0 = p1;
     }
+    for (double _t = 0.6666 ;_t<1; _t += 0.001) {
+      Point p1 = spline.evaluate(_t);
+      drawLine(p0,p1,Color.orange);
+      p0 = p1;
+    }
+    //for(int n=0 ;n<=evaluatePoints.size()-1 ; n++){
+      //drawLine(evaluatePoints.get(n),evaluatePoints.get(n+1),Color.orange);
+    //}
 
   }
 
@@ -121,8 +134,9 @@ public class Main extends JFrame {
    * @param _p1 始点
    * @param _p2 終点
    */
-  public void drawLine(Point _p1, Point _p2) {
+  public void drawLine(Point _p1, Point _p2,Color _color) {
     Graphics2D g = (Graphics2D)m_canvas.getGraphics();
+    g.setColor(_color);
 
     Line2D.Double line = new Line2D.Double(_p1.x(), _p1.y(), _p2.x(), _p2.y());
     g.draw(line);
