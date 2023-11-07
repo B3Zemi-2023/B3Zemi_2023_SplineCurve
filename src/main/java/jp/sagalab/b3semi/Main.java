@@ -70,7 +70,7 @@ public class Main extends JFrame {
     SplineCurve spline = SplineCurve.create(degree, cpPoints, knots, range);
     List<Point> evaluatePoints = new ArrayList<>();
     Point p0 = spline.evaluate(range.start());
-    for (double t = 0.0 ; t <= 0.25 ; t += 0.001) {
+    for (double t = 0.0 ; t <= 0.01 ; t += 0.001) {
       Point p1 = spline.evaluate(t);
       drawLine(p0, p1, Color.blue);
       p0 = p1;
@@ -82,12 +82,12 @@ public class Main extends JFrame {
     }
     for (double t = 0.77 ; t <= 0.78 ; t += 0.001) {
       Point p1 = spline.evaluate(t);
-      drawLine(p0, p1, Color.yellow);
+      drawLine(p0, p1, Color.red);
       p0 = p1;
     }
     for (double t = 0.78 ; t <= 1.0 ; t += 0.001) {
       Point p1 = spline.evaluate(t);
-      drawLine(p0, p1, Color.red);
+      drawLine(p0, p1, Color.yellow);
       p0 = p1;
     }
     //for (int n = 0 ; n < evaluatePoints.size() - 1 ; n ++) {//
