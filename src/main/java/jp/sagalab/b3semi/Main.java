@@ -9,6 +9,7 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -64,18 +65,39 @@ public class Main extends JFrame {
     Point[] cpPoints = m_controlPoints.toArray(new Point[0]);
     int _degree = 3;
     Range _range = Range.create(0, 1);
-    double[] _knots = createKnots(_degree, _range, cpPoints.length);
+    double[] _knots = new double[]{0, 0, 0, 0.333, 0.666, 1, 1, 1};
+    //double[] _knots = createKnots(_degree, _range, cpPoints.length);
+    System.out.println(Arrays.toString(_knots));
     SplineCurve splinecurve = SplineCurve.create(_degree, cpPoints, _knots, _range);
 
-    List<Point> evaluatePoints = new ArrayList<>();
-    for(double _t = 0; _t < 1; _t += 0.01) {
-      Point evaluate = splinecurve.evaluate(_t);
-      evaluatePoints.add(evaluate);
+    Point p0 = splinecurve.evaluate(_range.start());
+    for(double _t = 0; _t < 0.333; _t += 0.01) {
+      Point p1 = splinecurve.evaluate(_t);
+      drawLine(p0, p1, Color.GREEN);
+      p0 = p1;
     }
 
-    for (int i = 0; i < evaluatePoints.size()-1; ++i){
-      drawLine(evaluatePoints.get(i), evaluatePoints.get(i+1));
+    for(double _t = 0.333; _t < 0.666; _t += 0.01) {
+      Point p1 = splinecurve.evaluate(_t);
+      drawLine(p0, p1, Color.BLUE);
+      p0 = p1;
     }
+
+    for(double _t = 0.666; _t < 1; _t += 0.01) {
+      Point p1 = splinecurve.evaluate(_t);
+      drawLine(p0, p1, Color.RED);
+      p0 = p1;
+    }
+
+    //List<Point> evaluatePoints = new ArrayList<>();
+    //for(double _t = 0; _t < 1; _t += 0.01) {
+    //  Point evaluate = splinecurve.evaluate(_t);
+    //  evaluatePoints.add(evaluate);
+    //}
+
+    //for (int i = 0; i < evaluatePoints.size()-1; ++i){
+    //  drawLine(evaluatePoints.get(i), evaluatePoints.get(i+1));
+    //}
 
   }
 
@@ -121,8 +143,9 @@ public class Main extends JFrame {
    * @param _p1 始点
    * @param _p2 終点
    */
-  public void drawLine(Point _p1, Point _p2) {
+  public void drawLine(Point _p1, Point _p2, Color _color) {
     Graphics2D g = (Graphics2D)m_canvas.getGraphics();
+    g.setColor(_color);
 
     Line2D.Double line = new Line2D.Double(_p1.x(), _p1.y(), _p2.x(), _p2.y());
     g.draw(line);
