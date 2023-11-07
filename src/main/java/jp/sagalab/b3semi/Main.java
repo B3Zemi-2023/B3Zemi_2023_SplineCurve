@@ -62,7 +62,31 @@ public class Main extends JFrame {
     //リストを配列に変換する
     Point[] cpPoints = m_controlPoints.toArray(new Point[0]);
 
+    Range range = Range.create(0, 1);
+    double[] knots = new double[]{0.0,0.0,0.0,0.333,0.666,1.0,1.0,1.0};
+    SplineCurve splinecurve = SplineCurve.create(3, cpPoints, knots, range);
+    Point p0 = splinecurve.evaluate(0.0);
+    for (double i = 0.0; i <= 0.333; i += 0.01) {
+      Point p1 = splinecurve.evaluate(i);
+      drawLine(p0,p1,Color.green);
+      p0 = p1;
+    }
+
+    for (double i = 0.333; i <= 0.666; i += 0.01) {
+      Point p1 = splinecurve.evaluate(i);
+      drawLine(p0,p1,Color.red);
+      p0 = p1;
+    }
+    for (double i = 0.666; i <= 1.0; i += 0.01) {
+      Point p1 = splinecurve.evaluate(i);
+      drawLine(p0,p1,Color.yellow);
+      p0 = p1;
+    }
   }
+
+
+
+
 
   /**
    * 次数と制御点数から節点の区間数を求め、間を等分するような節点系列を返す。
@@ -106,9 +130,9 @@ public class Main extends JFrame {
    * @param _p1 始点
    * @param _p2 終点
    */
-  public void drawLine(Point _p1, Point _p2) {
+  public void drawLine(Point _p1, Point _p2,Color color) {
     Graphics2D g = (Graphics2D)m_canvas.getGraphics();
-
+    g.setColor(color);
     Line2D.Double line = new Line2D.Double(_p1.x(), _p1.y(), _p2.x(), _p2.y());
     g.draw(line);
   }
