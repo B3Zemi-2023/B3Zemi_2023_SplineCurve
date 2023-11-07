@@ -1,4 +1,4 @@
-﻿# B3Zemi_2022_SplineCurve
+﻿# B3Zemi_2023_SplineCurve
 Canvasに制御点を打って、その制御点をもとにSpline曲線の描画を行うプログラムです。
 
 ```
