@@ -58,17 +58,26 @@ public class Main extends JFrame {
     /* ↓ここから必要な処理を書き足していく↓ */
     // コツ: SplineCurve.create(args ・・・)でインスタンス生成を行い(引数は自分で考える)、
     int _degree =3;
-    Range range = Range.create(0,1);
+
+    Range range = Range.create(2,4);
     //リストを配列に変換する
     Point[] cpPoints = m_controlPoints.toArray(new Point[0]);
-    double[] knots = createKnots( _degree, range,  cpPoints.length);
+//    double[] knots = createKnots( _degree, range,  cpPoints.length);
+    double[] knots = new double[]{0,1,2,3,4,5,6};
 
     SplineCurve Spline =  SplineCurve.create(_degree, cpPoints, knots, range);
-
     // SplineCurve.evaluate(_t) と drawLine(_p1, _p2) を駆使する
-    for (double _t =o; _t<=1; _t+=0.01) {
-      Point evaluate = Spline.evaluate(_t);
+    List<Point> p = new ArrayList<>();
+    for (double _t = range.start(); _t < range.end(); _t+=0.01) {
+      //Point evaluate = Spline.evaluate(_t); //なんかできん
+      p.add(Spline.evaluate(_t));
+//      Point _p2 = Spline.evaluate(_t+0.01);
+    }
+    Color[] colors =new Color[]{Color.blue,Color.red,Color.yellow,Color.green};
+    for(int n = 0; n < p.size() - 1; ++n){
 
+      int i = (int)Math.floor(n/100);
+      drawLine(p.get(n), p.get(n+1), colors[i%3]);
 
     }
   }
@@ -87,12 +96,22 @@ public class Main extends JFrame {
     double end = _range.end();
     // 有効定義域の節点区間数
     int knotIntervalNum = _cpLength - _degree;
+
     double[] knots = new double[knotIntervalNum + 2 * _degree - 1];
+    for (int i = 0; i < knots.length; ++i) {
+      double w = (i - _degree + 1) / (double) knotIntervalNum;
+      knots[i] = (1.0 - w) * start + w * end;
+    }
+
+    /*追加
+    double[] knots = new double[_cpLength + _degree - 1];
 
     for (int i = 0; i < knots.length; ++i) {
       double w = (i - _degree + 1) / (double) knotIntervalNum;
       knots[i] = (1.0 - w) * start + w * end;
     }
+    */
+
     return knots;
   }
 
@@ -115,9 +134,9 @@ public class Main extends JFrame {
    * @param _p1 始点
    * @param _p2 終点
    */
-  public void drawLine(Point _p1, Point _p2) {
+  public void drawLine(Point _p1, Point _p2, Color _c) {
     Graphics2D g = (Graphics2D)m_canvas.getGraphics();
-
+    g.setColor(_c);
     Line2D.Double line = new Line2D.Double(_p1.x(), _p1.y(), _p2.x(), _p2.y());
     g.draw(line);
   }
@@ -129,5 +148,5 @@ public class Main extends JFrame {
   private final List<Point> m_controlPoints = new ArrayList<>();
 
   /** 点の数の上限 */
-  private static final int MAX_CONTROL_POINTS = 6;
+  private static final int MAX_CONTROL_POINTS = 5;
 }
